@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from '@firebase/auth';
 import { getDoc, doc, setDoc } from 'firebase/firestore';
 import AuthScreen from './AuthScreen';
 import AuthenticatedScreen from './AuthenticatedScreen';
+import NoticeDetail from './NoticeDetailScreen';
 import { app, firestore } from './firebase';
+
+const Stack = createStackNavigator();
 
 const App = () => {
   const [email, setEmail] = useState('');
@@ -56,35 +61,70 @@ const App = () => {
     }
   };
 
+  const getTopBarColor = () => {
+    return role === 'admin' ? '#e74c3c' : '#1c1c1c'; // Red for admin, blue for user
+  };
+
+  const getTopBarTextColor = () => {
+    return role === 'admin' ? '#fff' : '#fff'; // White text for better contrast
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {user ? (
-        <AuthenticatedScreen user={user} role={role} handleAuthentication={handleAuthentication} />
-      ) : (
-        <AuthScreen
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          role={role}
-          setRole={setRole}
-          isLogin={isLogin}
-          setIsLogin={setIsLogin}
-          handleAuthentication={handleAuthentication}
+    <NavigationContainer>
+      <Stack.Navigator>
+        {user ? (
+          <Stack.Screen
+            name="Home Page"
+            options={{
+              headerTitleAlign: 'center',
+              headerStyle: {
+                backgroundColor: getTopBarColor(),
+              },
+              headerTintColor: getTopBarTextColor(),
+            }}
+          >
+            {() => <AuthenticatedScreen user={user} role={role} handleAuthentication={handleAuthentication} />}
+          </Stack.Screen>
+        ) : (
+          <Stack.Screen
+            name="Welcome"
+            options={{
+              headerTitleAlign: 'center',
+              headerStyle: {
+                backgroundColor: '#2c3e50', // Dark theme for login screen
+              },
+              headerTintColor: '#fff', // White text for better contrast
+            }}
+          >
+            {() => (
+              <AuthScreen
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                role={role}
+                setRole={setRole}
+                isLogin={isLogin}
+                setIsLogin={setIsLogin}
+                handleAuthentication={handleAuthentication}
+              />
+            )}
+          </Stack.Screen>
+        )}
+        <Stack.Screen
+          name="NoticeDetail"
+          component={NoticeDetail}
+          options={{
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: getTopBarColor(),
+            },
+            headerTintColor: getTopBarTextColor(),
+          }}
         />
-      )}
-    </ScrollView>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f0f0f0',
-  },
-});
 
 export default App;
